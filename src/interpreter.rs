@@ -25,10 +25,13 @@ pub enum BuildLoopMapError {
 fn build_loop_map(code: &str) -> Result<HashMap<usize, usize>, BuildLoopMapError> {
     use BuildLoopMapError::*;
 
+    let code = code
+        .chars()
+        .filter(|c| ['+', '-', '<', '>', '[', ']', '.', ','].contains(&c));
     let mut loops = HashMap::new();
     let mut open_loops = Vec::new();
 
-    for (i, c) in code.chars().enumerate() {
+    for (i, c) in code.enumerate() {
         match c {
             '[' => open_loops.push(i),
             ']' => {
@@ -53,8 +56,11 @@ pub fn build_instructions(code: &str, loops: &HashMap<usize, usize>) -> Vec<Inst
     use Instruction::*;
 
     let mut instructions = Vec::new();
+    let code = code
+        .chars()
+        .filter(|c| ['+', '-', '<', '>', '[', ']', '.', ','].contains(&c));
 
-    for (i, c) in code.chars().enumerate() {
+    for (i, c) in code.enumerate() {
         let instruction = match c {
             '+' => Increment,
             '-' => Decrement,
@@ -85,7 +91,7 @@ pub struct Interpreter {
     pub instructions: Vec<Instruction>,
     pub instruction_pointer: usize,
     pub data_pointer: usize,
-    pub tape: [u8; 3000],
+    pub tape: [u8; 30000],
 }
 
 impl Interpreter {
@@ -97,7 +103,7 @@ impl Interpreter {
             instructions,
             instruction_pointer: 0,
             data_pointer: 0,
-            tape: [0; 3000],
+            tape: [0; 30000],
         })
     }
 
@@ -113,10 +119,12 @@ impl Interpreter {
         match self.instructions[self.instruction_pointer] {
             Increment => *cell = cell.wrapping_add(1),
             Decrement => *cell = cell.wrapping_sub(1),
+            MoveRight if self.data_pointer == 2999 => self.data_pointer = 0,
             MoveRight => self.data_pointer += 1,
+            MoveLeft if self.data_pointer == 0 => self.data_pointer = 2999,
             MoveLeft => self.data_pointer -= 1,
-            StartLoop(n) if *cell == 0 => self.instruction_pointer = n - 1,
-            EndLoop(n) if *cell != 0 => self.instruction_pointer = n - 1,
+            StartLoop(n) if *cell == 0 => self.instruction_pointer = n,
+            EndLoop(n) if *cell != 0 => self.instruction_pointer = n,
             Output => print!("{}", *cell as char),
             Input => *cell = input.next().unwrap(),
             Halt => return false,

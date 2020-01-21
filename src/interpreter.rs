@@ -50,18 +50,20 @@ fn build_loop_map(code: &str) -> Result<HashMap<usize, usize>, BuildLoopMapError
 
 // Converts the code string into a vector of instructions
 pub fn build_instructions(code: &str, loops: &HashMap<usize, usize>) -> Vec<Instruction> {
+    use Instruction::*;
+
     let mut instructions = Vec::new();
 
     for (i, c) in code.chars().enumerate() {
         let instruction = match c {
-            '+' => Instruction::Increment,
-            '-' => Instruction::Decrement,
-            '<' => Instruction::MoveLeft,
-            '>' => Instruction::MoveRight,
-            '[' => Instruction::StartLoop(*loops.get(&i).unwrap()),
-            ']' => Instruction::EndLoop(*loops.get(&i).unwrap()),
-            '.' => Instruction::Output,
-            ',' => Instruction::Input,
+            '+' => Increment,
+            '-' => Decrement,
+            '<' => MoveLeft,
+            '>' => MoveRight,
+            '[' => StartLoop(*loops.get(&i).unwrap()),
+            ']' => EndLoop(*loops.get(&i).unwrap()),
+            '.' => Output,
+            ',' => Input,
             _ => continue,
         };
 
